@@ -14,7 +14,7 @@ const Footer = () => {
   return (
     <footer style={footerStyle}>
       <div className="container">
-        <p>© 2024 Earth Store. All rights reserved.</p>
+        <p>© 2024 Car Shop. All rights reserved.</p>
       </div>
     </footer>
   );
