@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-const productDetailStyle = {
+const productDetailContainerStyle = {
   display: 'flex',
-  flexDirection: 'column',
+  justifyContent: 'space-between',
   alignItems: 'center',
-  padding: '20px'
+  padding: '20px',
+  backgroundColor: '#f7f7f7',
+  borderRadius: '10px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+};
+
+const imgContainerStyle = {
+  flex: '1',
+  textAlign: 'center'
 };
 
 const imgStyle = {
@@ -14,8 +22,9 @@ const imgStyle = {
   marginBottom: '20px'
 };
 
-const detailStyle = {
-  textAlign: 'center'
+const detailContainerStyle = {
+  flex: '2',
+  paddingLeft: '20px'
 };
 
 const commentFormStyle = {
@@ -43,22 +52,38 @@ const buttonStyle = {
   cursor: 'pointer'
 };
 
+const commentListStyle = {
+  width: '100%',
+  maxWidth: '600px',
+  margin: '20px auto',
+  padding: '20px',
+  border: '1px solid #ccc',
+  borderRadius: '5px',
+  backgroundColor: '#f9f9f9'
+};
+
 const ProductDetail = () => {
   const { id } = useParams();
+  const [product, setProduct] = useState(null);
   const [comments, setComments] = useState([]);
   const [form, setForm] = useState({
-    name: '',
-    email: '',
     content: '',
     rating: ''
   });
 
-  const product = {
-    id: id,
-    name: `Product ${id}`,
-    description: `Description of Product ${id}`,
-    image: 'https://via.placeholder.com/300' // Replace with your actual image URL
-  };
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${id}`);
+        const data = await response.json();
+        setProduct(data);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -71,44 +96,31 @@ const ProductDetail = () => {
       return;
     }
     setComments([...comments, form]);
-    setForm({ name: '', email: '', content: '', rating: '' });
+    setForm({ content: '', rating: '' });
   };
 
+  if (!product) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div style={productDetailStyle}>
-      <img src={product.image} alt={product.name} style={imgStyle} />
-      <div style={detailStyle}>
-        <h2>{product.name}</h2>
-        <p>{product.description}</p>
+    <div>
+      <div style={productDetailContainerStyle}>
+        <div style={imgContainerStyle}>
+          <img src={product.image} alt={product.name} style={imgStyle} />
+        </div>
+        <div style={detailContainerStyle}>
+          <h2>{product.name}</h2>
+          <ul>
+            {product.features.map((feature, index) => (
+              <li key={index}>{feature}</li>
+            ))}
+          </ul>
+        </div>
       </div>
       <div style={commentFormStyle}>
-        <h3>Comments</h3>
-        <ul>
-          {comments.map((comment, index) => (
-            <li key={index}>
-              <p><strong>{comment.name} ({comment.email}):</strong> {comment.content} - Rating: {comment.rating}</p>
-            </li>
-          ))}
-        </ul>
+        <h3>Leave a Comment</h3>
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Your name"
-            required
-            style={inputStyle}
-          />
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Your email"
-            required
-            style={inputStyle}
-          />
           <textarea
             name="content"
             value={form.content}
@@ -130,6 +142,16 @@ const ProductDetail = () => {
           />
           <button type="submit" style={buttonStyle}>Submit</button>
         </form>
+      </div>
+      <div style={commentListStyle}>
+        <h3>Comments</h3>
+        <ul>
+          {comments.map((comment, index) => (
+            <li key={index}>
+              <p><strong>Rating:</strong> {comment.rating} - {comment.content}</p>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
